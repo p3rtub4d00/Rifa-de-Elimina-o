@@ -1,7 +1,7 @@
 {
   "name": "rifa-survival-game",
-  "version": "1.1.0",
-  "description": "Jogo de eliminacao com Bots",
+  "version": "1.2.0",
+  "description": "Jogo de eliminacao com Bots e Audio",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
