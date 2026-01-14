@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SURVIVAL RAFFLE - KILL OR PAY</title>
+    <title>SURVIVAL RAFFLE - BOTS EDITION</title>
     <link rel="stylesheet" href="style.css">
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -13,18 +12,24 @@
     <div class="container">
         <div id="login-screen" class="screen active">
             <h1 class="glitch">SURVIVAL<br>MODE</h1>
-            <p>Entre na arena. Sobreviva.</p>
+            <p>A taxa de sobrevivência é baixa.</p>
             <input type="text" id="username" placeholder="SEU NICKNAME" maxlength="12">
             <button onclick="joinGame()">ENTRAR NA ARENA</button>
+            
+            <div class="admin-panel">
+                <p>--- ADMIN AREA ---</p>
+                <button class="btn-secondary" onclick="addBots(3)">+3 BOTS</button>
+                <button class="btn-secondary" onclick="addBots(5)">+5 BOTS</button>
+            </div>
         </div>
 
         <div id="game-screen" class="screen">
             <div class="header">
                 <div class="status-bar">VIVOS: <span id="alive-count">0</span></div>
-                <div class="status-bar" style="color:var(--neon-green)">PRÊMIO: R$ 500,00</div>
+                <div class="status-bar green-text">PRÊMIO: R$ 500,00</div>
             </div>
 
-            <div id="game-status-text" class="status-text">AGUARDANDO JOGADORES...</div>
+            <div id="game-status-text" class="status-text">AGUARDANDO...</div>
 
             <div id="danger-zone" class="hidden">
                 <div class="pulse-ring"></div>
@@ -33,20 +38,21 @@
                 <p id="instruction-text">ESTÁ SEGURO... POR ENQUANTO.</p>
                 
                 <button id="pay-btn" class="pay-btn hidden" onclick="payToLive()">
-                    PAGAR R$ 2,00 PARA SOBREVIVER
+                    PAGAR R$ 2,00 (SALVAR VIDA)
                 </button>
             </div>
 
-            <div class="players-grid" id="players-list">
-                </div>
+            <div class="players-grid" id="players-list"></div>
 
-            <button id="start-btn" onclick="startGame()">INICIAR RODADA (ADMIN)</button>
+            <div id="admin-game-controls">
+                <button id="start-btn" onclick="startGame()">INICIAR RODADA (ADMIN)</button>
+            </div>
         </div>
 
         <div id="result-screen" class="screen">
-            <h1 id="result-title">VOCÊ MORREU</h1>
-            <p id="result-message">Mais sorte (ou dinheiro) na próxima.</p>
-            <button onclick="location.reload()">VOLTAR AO MENU</button>
+            <h1 id="result-title">FIM DE JOGO</h1>
+            <p id="result-message">...</p>
+            <button onclick="location.reload()">REINICIAR</button>
         </div>
     </div>
 
