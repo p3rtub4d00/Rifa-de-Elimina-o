@@ -1,6 +1,6 @@
 const socket = io();
 
-// DOM Elements
+// Elementos
 const loginScreen = document.getElementById('login-screen');
 const gameScreen = document.getElementById('game-screen');
 const resultScreen = document.getElementById('result-screen');
@@ -12,6 +12,7 @@ const instructionEl = document.getElementById('instruction-text');
 const payBtn = document.getElementById('pay-btn');
 const aliveCountEl = document.getElementById('alive-count');
 const statusText = document.getElementById('game-status-text');
+const chatBar = document.getElementById('chat-bar');
 
 let myId = null;
 let countdownInterval;
@@ -21,34 +22,35 @@ let countdownInterval;
 function joinGame() {
     const name = document.getElementById('username').value;
     if (!name) return alert('DIGITE UM NOME!');
-    
-    // INICIAR O AUDIO CONTEXT (Necessário interação do usuário)
     initAudio(); 
-    
     socket.emit('join_game', name);
     loginScreen.classList.remove('active');
     gameScreen.classList.add('active');
 }
 
-function addBots(qtd) {
-    socket.emit('add_bots', qtd);
-}
+function addBots(qtd) { socket.emit('add_bots', qtd); }
 
 function startGame() {
     socket.emit('start_game_signal');
     document.getElementById('admin-game-controls').classList.add('hidden');
 }
 
-function payToLive() {
-    socket.emit('pay_revive');
+function payToLive() { socket.emit('pay_revive'); }
+
+function sendChat(msg) {
+    socket.emit('send_chat', msg);
+    // Tocar um som sutil de clique (opcional)
 }
 
-// --- SOCKET LISTENERS ---
+// --- SOCKET EVENTS ---
 
 socket.on('connect', () => { myId = socket.id; });
 socket.on('error_msg', (msg) => { alert(msg); });
 
 socket.on('update_players', (players) => {
+    // Para não redesenhar tudo e perder os balões de chat, verificamos se mudou
+    // Mas para este MVP, vamos redesenhar e manter chat separado se possível.
+    // Simplificação: Redesenha, mas se tiver chat ativo, perdemos (ok para MVP)
     playersList.innerHTML = '';
     let aliveCount = 0;
     players.forEach(p => {
@@ -62,27 +64,42 @@ socket.on('update_players', (players) => {
     aliveCountEl.innerText = aliveCount;
 });
 
+socket.on('chat_message', (data) => {
+    const playerCard = document.getElementById(`player-${data.playerId}`);
+    if (playerCard) {
+        // Cria balão
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble';
+        bubble.innerText = data.text;
+        playerCard.appendChild(bubble);
+
+        // Remove após 3 segundos
+        setTimeout(() => {
+            if (playerCard.contains(bubble)) {
+                playerCard.removeChild(bubble);
+            }
+        }, 3000);
+    }
+});
+
 socket.on('game_started', () => {
     statusText.innerText = "SOBREVIVÊNCIA INICIADA";
     statusText.style.color = "var(--neon-red)";
     dangerZone.classList.add('hidden'); 
     document.getElementById('admin-game-controls').classList.add('hidden');
+    chatBar.classList.remove('hidden'); // Mostra chat
 });
 
 socket.on('new_target', (data) => {
-    // Reset Visual e Audio
     document.body.classList.remove('in-danger');
     document.body.classList.remove('panic-mode'); 
     countdownEl.classList.remove('critical');
-    
     payBtn.classList.add('hidden');
     dangerZone.classList.remove('hidden');
     document.querySelectorAll('.player-card').forEach(el => el.classList.remove('target'));
     
-    // Som de Alarme
     playAlarm();
 
-    // Highlight Target
     const targetCard = document.getElementById(`player-${data.targetId}`);
     if (targetCard) targetCard.classList.add('target');
 
@@ -98,26 +115,17 @@ socket.on('new_target', (data) => {
         instructionEl.style.color = "#888";
     }
 
-    // Timer
     let timeLeft = data.timeLeft;
     countdownEl.innerText = timeLeft;
     clearInterval(countdownInterval);
-    
     countdownInterval = setInterval(() => {
         timeLeft--;
         countdownEl.innerText = timeLeft;
-
-        // EFEITOS DE TENSÃO
-        if (timeLeft > 0) {
-             playTick(timeLeft); // Toca o bip
-        }
-        
-        // Se faltar 5 segundos, ativa o MODO PÂNICO
+        if (timeLeft > 0) playTick(timeLeft);
         if (timeLeft <= 5 && timeLeft > 0) {
             document.body.classList.add('panic-mode');
             countdownEl.classList.add('critical');
         }
-
         if (timeLeft <= 0) clearInterval(countdownInterval);
     }, 1000);
 });
@@ -126,10 +134,7 @@ socket.on('payment_received', (data) => {
     clearInterval(countdownInterval);
     document.body.classList.remove('panic-mode'); 
     countdownEl.classList.remove('critical');
-    
-    // Som de Dinheiro
     playCash();
-
     instructionEl.innerText = `${data.player} PAGOU E SOBREVIVEU.`;
     instructionEl.style.color = "var(--neon-green)";
     payBtn.classList.add('hidden');
@@ -140,10 +145,7 @@ socket.on('player_eliminated', (data) => {
     clearInterval(countdownInterval);
     document.body.classList.remove('panic-mode');
     countdownEl.classList.remove('critical');
-
-    // Som de Morte
     playDeath();
-
     instructionEl.innerText = `${data.playerName} FOI ELIMINADO.`;
     instructionEl.style.color = "var(--neon-red)";
     payBtn.classList.add('hidden');
@@ -153,18 +155,14 @@ socket.on('player_eliminated', (data) => {
 socket.on('game_over', (winner) => {
     gameScreen.classList.remove('active');
     resultScreen.classList.add('active');
-    playCash(); // Som de vitória
-    
+    playCash();
     const title = document.getElementById('result-title');
     const msg = document.getElementById('result-message');
-
     if (winner.id === myId) {
-        title.innerText = "VITÓRIA";
-        title.style.color = "var(--neon-green)";
+        title.innerText = "VITÓRIA"; title.style.color = "var(--neon-green)";
         msg.innerText = "O dinheiro é seu.";
     } else {
-        title.innerText = "GAME OVER";
-        title.style.color = "var(--neon-red)";
+        title.innerText = "GAME OVER"; title.style.color = "var(--neon-red)";
         msg.innerText = `${winner.name} levou tudo.`;
     }
 });
