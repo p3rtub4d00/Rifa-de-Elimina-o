@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SURVIVAL RAFFLE - CHAT EDITION</title>
+    <title>SURVIVAL RAFFLE - SABOTAGE</title>
     <link rel="stylesheet" href="style.css">
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -12,13 +12,10 @@
     <div class="container">
         <div id="login-screen" class="screen active">
             <h1 class="glitch">SURVIVAL<br>MODE</h1>
-            <p>Falar besteira é grátis. Viver custa caro.</p>
+            <p>Sobreviva. Sabote. Vença.</p>
             <input type="text" id="username" placeholder="SEU NICKNAME" maxlength="12">
             <button onclick="joinGame()">ENTRAR NA ARENA</button>
-            
             <div class="admin-panel">
-                <p>--- ADMIN AREA ---</p>
-                <button class="btn-secondary" onclick="addBots(3)">+3 BOTS</button>
                 <button class="btn-secondary" onclick="addBots(5)">+5 BOTS</button>
             </div>
         </div>
@@ -38,17 +35,20 @@
                 <p id="instruction-text">ESTÁ SEGURO... POR ENQUANTO.</p>
                 
                 <button id="pay-btn" class="pay-btn hidden" onclick="payToLive()">
-                    PAGAR R$ 2,00 (SALVAR VIDA)
+                    PAGAR R$ 2,00
                 </button>
+                
+                <div id="freeze-overlay" class="hidden">❄️ CONGELADO ❄️</div>
             </div>
+
+            <div id="inventory-bar" class="inventory-bar"></div>
 
             <div class="players-grid" id="players-list"></div>
 
             <div id="chat-bar" class="chat-bar hidden">
                 <button class="chat-btn" onclick="sendChat('KKKKK')">KKKK</button>
-                <button class="chat-btn" onclick="sendChat('PAGA!')">PAGA!</button>
+                <button class="chat-btn" onclick="sendChat('GELO!')">GELO!</button>
                 <button class="chat-btn" onclick="sendChat('ADEUS')">ADEUS</button>
-                <button class="chat-btn" onclick="sendChat('MEDO?')">MEDO?</button>
             </div>
 
             <div id="admin-game-controls">
