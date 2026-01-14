@@ -1,4 +1,4 @@
-// GERADOR DE EFEITOS SONOROS (SEM ARQUIVOS MP3)
+// GERADOR DE EFEITOS SONOROS (WEB AUDIO API)
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx;
 
@@ -51,7 +51,7 @@ function playAlarm() {
     osc.stop(audioCtx.currentTime + 0.5);
 }
 
-// Som de "Pagamento" (Cash Register / Mario Coin style)
+// Som de "Pagamento" (Cash Register)
 function playCash() {
     if (!audioCtx) return;
     const t = audioCtx.currentTime;
@@ -93,13 +93,13 @@ function playDeath() {
     osc.frequency.setValueAtTime(200, audioCtx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 1);
 
-    // Efeito de tremolo (volume oscilando)
+    // Efeito de tremolo
     const lfo = audioCtx.createOscillator();
     lfo.type = 'square';
-    lfo.frequency.value = 50; // Glitch rapido
+    lfo.frequency.value = 50; 
     const lfoGain = audioCtx.createGain();
     lfoGain.gain.value = 500;
-    lfo.connect(lfoGain); // Não conecta no destino, modula algo se quisesse
+    lfo.connect(lfoGain); 
 
     gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
     gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1);
