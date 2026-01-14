@@ -1,1 +1,55 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SURVIVAL RAFFLE - KILL OR PAY</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <div id="login-screen" class="screen active">
+            <h1 class="glitch">SURVIVAL<br>MODE</h1>
+            <p>Entre na arena. Sobreviva.</p>
+            <input type="text" id="username" placeholder="SEU NICKNAME" maxlength="12">
+            <button onclick="joinGame()">ENTRAR NA ARENA</button>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div class="header">
+                <div class="status-bar">VIVOS: <span id="alive-count">0</span></div>
+                <div class="status-bar" style="color:var(--neon-green)">PRÊMIO: R$ 500,00</div>
+            </div>
+
+            <div id="game-status-text" class="status-text">AGUARDANDO JOGADORES...</div>
+
+            <div id="danger-zone" class="hidden">
+                <div class="pulse-ring"></div>
+                <h2 id="target-name">...</h2>
+                <div class="timer" id="countdown">15</div>
+                <p id="instruction-text">ESTÁ SEGURO... POR ENQUANTO.</p>
+                
+                <button id="pay-btn" class="pay-btn hidden" onclick="payToLive()">
+                    PAGAR R$ 2,00 PARA SOBREVIVER
+                </button>
+            </div>
+
+            <div class="players-grid" id="players-list">
+                </div>
+
+            <button id="start-btn" onclick="startGame()">INICIAR RODADA (ADMIN)</button>
+        </div>
+
+        <div id="result-screen" class="screen">
+            <h1 id="result-title">VOCÊ MORREU</h1>
+            <p id="result-message">Mais sorte (ou dinheiro) na próxima.</p>
+            <button onclick="location.reload()">VOLTAR AO MENU</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
