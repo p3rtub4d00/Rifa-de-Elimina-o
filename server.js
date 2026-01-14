@@ -11,16 +11,17 @@ app.use(express.static('public'));
 // --- CONFIGURAÇÃO ---
 const TIME_TO_DIE = 15;
 const BOT_SURVIVAL_CHANCE = 0.85; 
+const STARTING_PRIZE = 500.00; // Prêmio inicial
+const PAY_PRICE = 2.00; // Quanto custa para viver
 const BOT_NAMES = [
     "Ghost_Rider", "Killer007", "Viper_X", "Titan_Br", "ShadowHunter",
     "Neon_Wolf", "CyberPunk", "Rich_Kid", "NoobMaster", "Pro_Gamer",
     "Alpha_Male", "Dona_Morte", "Sniper_Elite", "00_Dinheiro", "Rico_Suave"
 ];
 
-// Mensagens que os bots usam
 const BOT_MESSAGES = {
-    pay: ["Ufa!", "Quase...", "Tô liso", "Mais uma", "Vivos?"],
-    laugh: ["KKKKK", "Já era", "Adeus!", "F", "Bye Bye"],
+    pay: ["Ufa!", "Quase...", "Tô liso", "Mais uma", "Vivos?", "Aumenta o pote!"],
+    laugh: ["KKKKK", "Já era", "Adeus!", "F", "Bye Bye", "Menos um"],
     taunt: ["Paga logo!", "Vai morrer", "Tic Tac", "Medo?", "Sua vez"]
 };
 
@@ -30,10 +31,14 @@ let gameStatus = 'waiting';
 let eliminationTimer = null;
 let currentTargetId = null;
 let botDecisionTimer = null;
+let currentPrize = STARTING_PRIZE;
 
 // --- LOGICA DO SERVIDOR ---
 io.on('connection', (socket) => {
     console.log('Conexão:', socket.id);
+
+    // Envia o valor atual do prêmio ao conectar
+    socket.emit('update_prize', currentPrize);
 
     socket.on('join_game', (playerName) => {
         if (gameStatus !== 'waiting') {
@@ -54,8 +59,11 @@ io.on('connection', (socket) => {
     socket.on('start_game_signal', () => {
         const aliveCount = Object.values(players).filter(p => p.status === 'alive').length;
         if (aliveCount < 2) return io.emit('error_msg', 'Mínimo 2 jogadores!');
+        
         gameStatus = 'active';
+        currentPrize = STARTING_PRIZE; // Reseta prêmio
         io.emit('game_started');
+        io.emit('update_prize', currentPrize);
         startEliminationRound();
     });
 
@@ -64,7 +72,6 @@ io.on('connection', (socket) => {
         processPayment(socket.id);
     });
 
-    // NOVO: Receber Chat do Jogador
     socket.on('send_chat', (msg) => {
         if (players[socket.id] && players[socket.id].status === 'alive') {
             io.emit('chat_message', { playerId: socket.id, text: msg });
@@ -104,9 +111,13 @@ function addPlayer(id, name, isBot) {
 function processPayment(playerId) {
     clearTimeout(eliminationTimer);
     clearTimeout(botDecisionTimer);
+    
+    // AUMENTA O PRÊMIO
+    currentPrize += PAY_PRICE;
+    io.emit('update_prize', currentPrize);
+
     io.emit('payment_received', { player: players[playerId].name });
     
-    // Bot fala algo quando paga (chance 30%)
     if (players[playerId].isBot && Math.random() < 0.3) {
         botSay(playerId, 'pay');
     }
@@ -119,7 +130,7 @@ function startEliminationRound() {
     
     if (alivePlayers.length === 1) {
         gameStatus = 'ended';
-        io.emit('game_over', alivePlayers[0]);
+        io.emit('game_over', { winner: alivePlayers[0], prize: currentPrize });
         setTimeout(resetGame, 8000);
         return;
     }
@@ -138,7 +149,6 @@ function startEliminationRound() {
         timeLeft: TIME_TO_DIE 
     });
 
-    // Bots provocam o alvo (chance 20% para cada bot vivo)
     alivePlayers.forEach(p => {
         if (p.isBot && p.id !== victim.id && Math.random() < 0.2) {
             setTimeout(() => botSay(p.id, 'taunt'), Math.random() * 2000);
@@ -157,7 +167,7 @@ function handleBotTurn(botId) {
         if (Math.random() < BOT_SURVIVAL_CHANCE) {
             processPayment(botId);
         } else {
-            // Bot aceita a morte
+            console.log("Bot morreu");
         }
     }, thinkingTime);
 }
@@ -170,7 +180,6 @@ function eliminatePlayer(playerId) {
             playerName: players[playerId].name 
         });
         
-        // Bots riem do morto (chance 40%)
         Object.values(players).forEach(p => {
             if (p.isBot && p.status === 'alive' && Math.random() < 0.4) {
                 setTimeout(() => botSay(p.id, 'laugh'), Math.random() * 2000);
@@ -181,7 +190,6 @@ function eliminatePlayer(playerId) {
     }
 }
 
-// Faz um bot falar uma frase da categoria
 function botSay(botId, category) {
     const msgs = BOT_MESSAGES[category];
     const msg = msgs[Math.floor(Math.random() * msgs.length)];
@@ -191,6 +199,7 @@ function botSay(botId, category) {
 function resetGame() {
     players = {};
     gameStatus = 'waiting';
+    currentPrize = STARTING_PRIZE;
     io.emit('reset_game');
 }
 
