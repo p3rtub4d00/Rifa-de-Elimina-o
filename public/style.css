@@ -23,9 +23,12 @@ body {
     max-width: 500px;
     padding: 20px;
     text-align: center;
+    position: relative;
 }
 
-/* TELAS */
+/* UTILITARIOS */
+.green-text { color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); }
+.hidden { display: none !important; }
 .screen { display: none; }
 .screen.active { display: block; animation: fadeIn 0.5s; }
 
@@ -34,19 +37,22 @@ h1.glitch {
     font-size: 3rem;
     color: var(--neon-red);
     text-shadow: 2px 2px 0px #fff;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     font-weight: 900;
+    letter-spacing: -2px;
 }
 
 input {
     background: #000;
-    border: 2px solid var(--neon-red);
+    border: 1px solid #333;
+    border-bottom: 2px solid var(--neon-red);
     color: #fff;
     padding: 15px;
     font-size: 1.2rem;
     width: 100%;
     margin-bottom: 15px;
     text-transform: uppercase;
+    text-align: center;
     outline: none;
 }
 
@@ -56,11 +62,12 @@ button {
     border: none;
     padding: 15px;
     width: 100%;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: bold;
     cursor: pointer;
     text-transform: uppercase;
-    transition: 0.2s;
+    margin-bottom: 10px;
+    clip-path: polygon(5% 0, 100% 0, 100% 90%, 95% 100%, 0 100%, 0 10%);
 }
 
 button:hover {
@@ -68,84 +75,85 @@ button:hover {
     box-shadow: 0 0 15px var(--neon-red);
 }
 
+.btn-secondary {
+    background: #333;
+    color: #fff;
+    font-size: 0.8rem;
+    padding: 10px;
+}
+.btn-secondary:hover { background: #555; box-shadow: none; }
+
+.admin-panel {
+    margin-top: 30px;
+    border-top: 1px dashed #333;
+    padding-top: 20px;
+}
+
 /* JOGO */
 .header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 20px;
     border-bottom: 1px solid #333;
     padding-bottom: 10px;
-}
-
-.status-text {
-    font-size: 1.2rem;
     margin-bottom: 20px;
-    color: #888;
 }
 
-/* ZONA DE PERIGO */
+.status-text { font-size: 1.2rem; margin-bottom: 20px; color: #666; }
+
 #danger-zone {
-    background: #110000;
+    background: #150000;
     border: 2px solid var(--neon-red);
     padding: 20px;
     margin-bottom: 20px;
-    border-radius: 10px;
-    display: none; /* Controlado via JS */
+    border-radius: 5px;
 }
-#danger-zone.active { display: block; }
 
 .timer {
-    font-size: 4rem;
-    font-weight: bold;
+    font-size: 5rem;
+    font-weight: 900;
     color: var(--neon-red);
-    margin: 10px 0;
+    line-height: 1;
 }
 
 .pay-btn {
     background: var(--neon-green);
     color: #000;
-    margin-top: 10px;
-    animation: pulse 0.5s infinite;
-}
-.pay-btn:hover {
-    box-shadow: 0 0 20px var(--neon-green);
-    background: #fff;
+    margin-top: 15px;
+    animation: pulse 0.8s infinite;
 }
 
-.hidden { display: none !important; }
-
-/* GRID DE JOGADORES */
+/* GRID */
 .players-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 8px;
     margin-top: 20px;
 }
 
 .player-card {
-    background: var(--panel-bg);
-    padding: 10px;
+    background: #111;
+    padding: 8px;
     border: 1px solid #333;
-    border-radius: 5px;
-    font-size: 0.8rem;
-    opacity: 1;
-    transition: 0.3s;
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .player-card.dead {
     opacity: 0.3;
-    background: #000;
     text-decoration: line-through;
-    border-color: #333;
+    color: var(--neon-red);
 }
 
 .player-card.target {
-    border: 2px solid var(--neon-red);
-    background: #300000;
+    background: var(--neon-red);
+    color: #000;
+    font-weight: bold;
     animation: shake 0.5s infinite;
 }
 
-/* ANIMAÇÕES */
+/* ANIMATIONS */
 @keyframes shake {
     0% { transform: translate(1px, 1px) rotate(0deg); }
     10% { transform: translate(-1px, -2px) rotate(-1deg); }
@@ -161,18 +169,11 @@ button:hover {
 }
 
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(57, 255, 20, 0.7); }
+    70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(57, 255, 20, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(57, 255, 20, 0); }
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* ESTADO DE PERIGO DO JOGADOR LOCAL */
-body.in-danger {
-    background-color: #200000;
-    border: 5px solid var(--neon-red);
-}
+body.in-danger { border: 8px solid var(--neon-red); background: #200000; }
