@@ -21,6 +21,10 @@ let countdownInterval;
 function joinGame() {
     const name = document.getElementById('username').value;
     if (!name) return alert('DIGITE UM NOME!');
+    
+    // INICIAR O AUDIO CONTEXT (Necessário interação do usuário)
+    initAudio(); 
+    
     socket.emit('join_game', name);
     loginScreen.classList.remove('active');
     gameScreen.classList.add('active');
@@ -42,20 +46,16 @@ function payToLive() {
 // --- SOCKET LISTENERS ---
 
 socket.on('connect', () => { myId = socket.id; });
-
 socket.on('error_msg', (msg) => { alert(msg); });
 
 socket.on('update_players', (players) => {
     playersList.innerHTML = '';
     let aliveCount = 0;
-
     players.forEach(p => {
         if (p.status === 'alive') aliveCount++;
-        
         const div = document.createElement('div');
         div.className = `player-card ${p.status}`;
         div.id = `player-${p.id}`;
-        // Não mostramos quem é bot para o usuário final, para manter a ilusão
         div.innerText = p.name + (p.id === myId ? ' (VOCÊ)' : '');
         playersList.appendChild(div);
     });
@@ -65,24 +65,29 @@ socket.on('update_players', (players) => {
 socket.on('game_started', () => {
     statusText.innerText = "SOBREVIVÊNCIA INICIADA";
     statusText.style.color = "var(--neon-red)";
-    dangerZone.classList.add('hidden'); // Esconde até selecionar alvo
+    dangerZone.classList.add('hidden'); 
     document.getElementById('admin-game-controls').classList.add('hidden');
 });
 
 socket.on('new_target', (data) => {
-    // Reset Visual
+    // Reset Visual e Audio
     document.body.classList.remove('in-danger');
+    document.body.classList.remove('panic-mode'); 
+    countdownEl.classList.remove('critical');
+    
     payBtn.classList.add('hidden');
     dangerZone.classList.remove('hidden');
     document.querySelectorAll('.player-card').forEach(el => el.classList.remove('target'));
     
+    // Som de Alarme
+    playAlarm();
+
     // Highlight Target
     const targetCard = document.getElementById(`player-${data.targetId}`);
     if (targetCard) targetCard.classList.add('target');
 
     targetNameEl.innerText = `ALVO: ${data.targetName}`;
     
-    // É VOCÊ?
     if (data.targetId === myId) {
         document.body.classList.add('in-danger');
         instructionEl.innerText = "VOCÊ VAI MORRER! PAGUE AGORA!";
@@ -101,12 +106,30 @@ socket.on('new_target', (data) => {
     countdownInterval = setInterval(() => {
         timeLeft--;
         countdownEl.innerText = timeLeft;
+
+        // EFEITOS DE TENSÃO
+        if (timeLeft > 0) {
+             playTick(timeLeft); // Toca o bip
+        }
+        
+        // Se faltar 5 segundos, ativa o MODO PÂNICO
+        if (timeLeft <= 5 && timeLeft > 0) {
+            document.body.classList.add('panic-mode');
+            countdownEl.classList.add('critical');
+        }
+
         if (timeLeft <= 0) clearInterval(countdownInterval);
     }, 1000);
 });
 
 socket.on('payment_received', (data) => {
     clearInterval(countdownInterval);
+    document.body.classList.remove('panic-mode'); 
+    countdownEl.classList.remove('critical');
+    
+    // Som de Dinheiro
+    playCash();
+
     instructionEl.innerText = `${data.player} PAGOU E SOBREVIVEU.`;
     instructionEl.style.color = "var(--neon-green)";
     payBtn.classList.add('hidden');
@@ -115,6 +138,12 @@ socket.on('payment_received', (data) => {
 
 socket.on('player_eliminated', (data) => {
     clearInterval(countdownInterval);
+    document.body.classList.remove('panic-mode');
+    countdownEl.classList.remove('critical');
+
+    // Som de Morte
+    playDeath();
+
     instructionEl.innerText = `${data.playerName} FOI ELIMINADO.`;
     instructionEl.style.color = "var(--neon-red)";
     payBtn.classList.add('hidden');
@@ -124,6 +153,7 @@ socket.on('player_eliminated', (data) => {
 socket.on('game_over', (winner) => {
     gameScreen.classList.remove('active');
     resultScreen.classList.add('active');
+    playCash(); // Som de vitória
     
     const title = document.getElementById('result-title');
     const msg = document.getElementById('result-message');
